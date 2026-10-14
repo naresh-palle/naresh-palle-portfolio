@@ -106,7 +106,7 @@
 </div></section>
 
 <section class="section" id="blog"><div class="wrap">
-  <div class="section-head"><div><div class="eyebrow">05 / Knowledge library</div><h2>Technical blog</h2></div><p>Browse all published technical articles here. Every article opens in an on-page reader; no article redirects to WordPress.</p></div>
+  <div class="section-head"><div><div class="eyebrow">05 / Knowledge library</div><h2>Technical blog</h2></div><p>Browse and read your technical articles directly on this portfolio page. The article archive is synchronized from your existing WordPress site, while original links are retained only as optional source references.</p></div>
   <div class="blog-tools"><input id="blogSearch" type="search" placeholder="Search articles by title or topic…" aria-label="Search blog posts"><button class="btn ghost" id="showAllPosts" type="button">Show all articles ↻</button></div>
   <p class="blog-note" id="blogStatus">Loading published articles from BinaryBlogs…</p>
   <div class="grid three" id="blogGrid"><div class="empty">Connecting to the existing WordPress article archive…</div></div>
@@ -122,6 +122,7 @@
   <div class="article-dialog">
     <div class="article-top"><div><div id="articleMeta" class="meta"></div><h2 id="articleTitle"></h2></div><button id="articleClose" class="btn ghost" aria-label="Close article">Close ✕</button></div>
     <article id="articleBody" class="article-content"></article>
+    <div class="article-bottom"><a id="articleOriginal" class="btn primary" href="#" target="_blank" rel="noopener">Open original article ↗</a></div>
   </div>
 </div>
 
@@ -152,6 +153,7 @@
     document.getElementById('articleTitle').textContent=p.title;
     document.getElementById('articleMeta').textContent=(dateFmt(p.date)||'')+(p.categories?.length?' · '+p.categories.join(', '):'');
     document.getElementById('articleBody').innerHTML=safeHtml(p.content||('<p>'+p.excerpt+'</p>'));
+    document.getElementById('articleOriginal').href=p.url||'#';
     modal.classList.remove('hidden'); modal.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
   }
   function closeArticle(){
@@ -168,38 +170,42 @@
     grid.innerHTML=list.map((p,i)=>`<article class="card blog-card"><div class="meta">${dateFmt(p.date)}${p.categories?.length?' · '+p.categories.slice(0,2).join(', '):''}</div><h3>${p.title}</h3><p>${p.excerpt.slice(0,190)}${p.excerpt.length>190?'…':''}</p><button class="more article-open" data-post="${p.id}" style="background:none;border:0;padding:0;cursor:pointer">Read article ↗</button></article>`).join('');
     grid.querySelectorAll('.article-open').forEach(b=>b.addEventListener('click',()=>{const p=posts.find(x=>String(x.id)===b.dataset.post);if(p)showArticle(p)}));
   }
+  async function fetchPublic(type){
+    let page=1, all=[], totalPages=1;
+    while(page<=totalPages && page<=10){
+      const url='https://public-api.wordpress.com/rest/v1.1/sites/binaryblogs1.wordpress.com/posts/?number=100&page='+page+'&type='+encodeURIComponent(type);
+      const res=await fetch(url);
+      if(!res.ok) throw new Error('WordPress API returned '+res.status);
+      const data=await res.json();
+      totalPages=Math.min(data.pages||1,10);
+      all=all.concat((data.posts||[]).map(p=>({id:String(p.ID),title:stripHTML(p.title),excerpt:stripHTML(p.excerpt||p.content),content:p.content||'',url:p.URL||p.short_URL,date:p.date,categories:Object.keys(p.categories||{}),type:p.type||type})));
+      if((data.posts||[]).length<100) break;
+      page++;
+    }
+    return all;
+  }
   async function loadPosts(){
-    // Prefer the build-time synchronized archive. It contains every public post and full content.
+    // Most BinaryBlogs articles are WordPress pages, so posts alone are not the full archive.
+    const byId=new Map();
+    try{
+      const live=(await fetchPublic('post')).concat(await fetchPublic('page'));
+      live.forEach(p=>{if(p.id) byId.set(p.id,p)});
+    }catch(e){}
     try{
       const local=await fetch('posts.json',{cache:'no-store'});
       if(local.ok){
         const data=await local.json();
-        if(Array.isArray(data.posts) && data.posts.length){
-          posts=data.posts;
-          statusEl.textContent=`Loaded ${posts.length} synchronized public articles. Select “Read article” to read the full content here on this page.`;
-          renderPosts(); return;
-        }
+        if(Array.isArray(data.posts)) data.posts.forEach(p=>{if(p&&p.id) byId.set(String(p.id),p)});
       }
     }catch(e){}
-    // Fallback: live public API, if the site is opened without the generated archive.
-    try{
-      let page=1, all=[], totalPages=1;
-      while(page<=totalPages && page<=10){
-        const url='https://public-api.wordpress.com/rest/v1.1/sites/binaryblogs1.wordpress.com/posts/?number=100&page='+page;
-        const res=await fetch(url);
-        if(!res.ok) throw new Error('WordPress API returned '+res.status);
-        const data=await res.json();
-        totalPages=Math.min(data.pages||1,10);
-        all=all.concat((data.posts||[]).map(p=>({id:String(p.ID),title:stripHTML(p.title),excerpt:stripHTML(p.excerpt||p.content),content:p.content||'',url:p.URL||p.short_URL,date:p.date,categories:Object.keys(p.categories||{})})));
-        page++;
-      }
-      posts=all;
-      statusEl.textContent=posts.length?`Showing ${posts.length} published articles. Open any article to read the full text here on this page.`:'No public articles were returned. Open the original blog to browse all content.';
+    posts=[...byId.values()].filter(p=>p.title).sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+    if(posts.length){
+      statusEl.textContent=`Loaded ${posts.length} public articles. Select “Read article” to read the full content here on this page.`;
       renderPosts();
-    }catch(err){
-      statusEl.textContent='The synchronized article archive has not been generated yet and the live WordPress API could not be reached. Run the GitHub Actions synchronization workflow, then refresh.';
-      grid.innerHTML='<div class="empty">Blog synchronization is pending.<br>Run the article synchronization workflow and refresh this page.</div>';
+      return;
     }
+    statusEl.textContent='The article archive could not be loaded. Run the GitHub Actions synchronization workflow, then refresh.';
+    grid.innerHTML='<div class="empty">Blog synchronization is pending.<br>Run the article synchronization workflow and refresh this page.</div>';
   }
   searchEl.addEventListener('input',renderPosts);
   document.getElementById('showAllPosts')?.addEventListener('click',()=>{searchEl.value='';renderPosts();});
