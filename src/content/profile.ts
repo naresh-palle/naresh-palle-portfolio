@@ -10,7 +10,7 @@ export const profile = {
   photos: {
     hero: { name: "hero-portrait", sizes: [480, 768], alt: "Portrait of Naresh Palle in a red sweater with arms crossed", width: 864, height: 1152 },
     workspace: { name: "about-workspace", sizes: [480, 768], alt: "Naresh Palle in a technology workspace surrounded by holographic dashboards", width: 864, height: 1152 },
-    contact: { name: "contact-profile", sizes: [640, 1024], alt: "Side profile of Naresh Palle lit in blue and purple", width: 1280, height: 720 },
+    contact: { name: "contact-profile", sizes: [640, 1024], alt: "Portrait of Naresh Palle in a red sweater with arms crossed", width: 864, height: 1152 },
   },
   links: {
     linkedin: "https://linkedin.com/in/nareshpalle",
