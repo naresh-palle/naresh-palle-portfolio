@@ -17,7 +17,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "posts.json"
+OUTPUT = ROOT / "public" / "posts.json"
 API = "https://public-api.wordpress.com/rest/v1.1/sites/binaryblogs1.wordpress.com/posts/"
 PER_PAGE = 100
 

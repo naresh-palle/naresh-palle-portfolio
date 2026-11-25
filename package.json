@@ -1,0 +1,39 @@
+{
+  "name": "naresh-palle-portfolio",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Naresh Palle — Senior QA Engineer, DevOps Engineer and AI Solutions Architect portfolio.",
+  "scripts": {
+    "dev": "next dev",
+    "sync:posts": "python3 scripts/sync_wordpress_posts.py",
+    "build": "next build",
+    "build:pages": "NEXT_PUBLIC_BASE_PATH=/naresh-palle-portfolio NEXT_PUBLIC_SITE_URL=https://naresh-palle.github.io/naresh-palle-portfolio next build",
+    "build:cloudflare": "NEXT_PUBLIC_BASE_PATH= next build",
+    "images": "node scripts/build-images.mjs",
+    "typecheck": "tsc --noEmit",
+    "preview": "npx --yes serve out -l 4173"
+  },
+  "engines": {
+    "node": ">=20.9"
+  },
+  "dependencies": {
+    "@gsap/react": "^2.1.2",
+    "@xyflow/react": "^12.12.1",
+    "framer-motion": "^14.14.0",
+    "gsap": "^3.15.1",
+    "lucide-react": "^1.80.0",
+    "next": "^16.4.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^22.20.7",
+    "@types/react": "^19.3.3",
+    "@types/react-dom": "^19.3.0",
+    "postcss": "^8.5.33",
+    "sharp": "^0.35.5",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^5.9.3"
+  }
+}
