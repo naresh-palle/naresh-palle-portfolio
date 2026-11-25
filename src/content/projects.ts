@@ -9,7 +9,7 @@ export type ProjectStatus = {
 
 /**
  * Evidence level for each capability, shown as a badge:
- * code       — in a public GitHub repository
+ * code       — implemented in working scripts / practice artifacts
  * documented — written up on the BinaryBlogs technical blog
  * practice   — professional practice; no public code
  * plan       — part of a blueprint, not yet built publicly
@@ -33,7 +33,7 @@ export type Project = {
   approach: string[];
   security: string[];
   deployment: string[];
-  links: { github?: { label: string; href: string }[]; articles?: { label: string; href: string }[] };
+  links: { articles?: { label: string; href: string }[] };
   note?: string;
 };
 
@@ -62,7 +62,7 @@ export const projects: Project[] = [
       { label: "Parallel, cross-browser execution on a grid or Playwright workers", evidence: "practice" },
       { label: "Screenshots, logs and reports attached to every failure", evidence: "practice" },
       { label: "Nightly and per-merge-request runs from CI", evidence: "practice" },
-      { label: "Public sample framework repository", evidence: "plan" },
+      { label: "Shared sample framework package for teams", evidence: "plan" },
     ],
     challenges: [
       { title: "Flaky tests", body: "Replace fixed sleeps with explicit waits on application state, isolate test data per run and quarantine unstable tests instead of ignoring failures." },
@@ -145,7 +145,6 @@ export const projects: Project[] = [
       "Planned: the public health-check scripts from the Kubernetes health-check case study run as a post-deploy stage.",
     ],
     links: {
-      github: [{ label: "Application health check script", href: "https://github.com/naresh-palle/Application_HealthCheck" }],
       articles: [
         { label: "JMeter for performance & load testing", href: `${BLOG}/jmeter/` },
         { label: "Kubernetes with K3S and Helm", href: `${BLOG}/kubernetes-1-26-with-k3s/` },
@@ -175,7 +174,7 @@ export const projects: Project[] = [
       { label: "GitOps deployment with Argo CD and Helm", evidence: "practice" },
       { label: "Dynamic testing with OWASP ZAP on staging", evidence: "practice" },
       { label: "Penetration-testing test cases", evidence: "documented" },
-      { label: "Public reference pipeline repository", evidence: "plan" },
+      { label: "Shared reference pipeline definition for teams", evidence: "plan" },
     ],
     challenges: [
       { title: "Noise vs signal", body: "Fail the build on critical and high findings with a fix available; track the rest as backlog with an agreed expiry instead of blocking every merge." },
@@ -322,7 +321,7 @@ export const projects: Project[] = [
     summary:
       "Shell scripts that verify a frontend/backend application deployed on Minikube: an HTTP smoke test on the backend response, an application health check with pod status, and a Linux host monitor.",
     overview:
-      "A small, real set of scripts from my public GitHub. The application is deployed to Minikube as frontend and backend NodePort services; the scripts then confirm that the backend returns the expected response, that the frontend answers over HTTP and that its pods are running, and that the host has CPU, memory and disk headroom.",
+      "A small, real set of operational scripts. The application is deployed to Minikube as frontend and backend NodePort services; the scripts then confirm that the backend returns the expected response, that the frontend answers over HTTP and that its pods are running, and that the host has CPU, memory and disk headroom.",
     problem:
       "After a deployment, someone has to confirm the application actually works. Doing that by hand is slow and inconsistent, and resource problems on the host are noticed only after users complain.",
     diagram: "k8s-health",
@@ -349,11 +348,6 @@ export const projects: Project[] = [
     security: ["Scripts are read-only checks; they do not change cluster state.", "Run under a non-root user with kubeconfig scoped to the target namespace."],
     deployment: ["Scheduled with cron on the host.", "Planned: called as the post-deploy verification step of the CI/CD delivery plan."],
     links: {
-      github: [
-        { label: "Minikube_deploy", href: "https://github.com/naresh-palle/Minikube_deploy" },
-        { label: "Application_HealthCheck", href: "https://github.com/naresh-palle/Application_HealthCheck" },
-        { label: "System_HealthCheck", href: "https://github.com/naresh-palle/System_HealthCheck" },
-      ],
       articles: [{ label: "DevOps Linux commands", href: `${BLOG}/devops-linux-commands/` }],
     },
   },

@@ -7,7 +7,7 @@ import { Layers } from "lucide-react";
 import { diagrams, showcaseDiagrams, type DiagramId } from "@/content/diagrams";
 import { projectCategories, projects, type ProjectCategory } from "@/content/projects";
 import { ArchitectureFlow } from "../flow";
-import { GithubIcon, Icon } from "../icons";
+import { Icon } from "../icons";
 import { Reveal } from "../reveal";
 import { SectionHeading } from "../section-heading";
 import { SpotlightCard } from "../spotlight-card";
@@ -94,12 +94,6 @@ export function Projects() {
                     <Link href={`/projects/${p.slug}/`} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[13px] font-semibold text-cyan-soft hover:text-white">
                       <Layers className="h-4 w-4" aria-hidden="true" /> Case study
                     </Link>
-                    {p.links.github?.[0] && (
-                      <a href={p.links.github[0].href} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[13px] text-haze hover:text-white">
-                        <GithubIcon className="h-4 w-4" /> Code
-                        <span className="sr-only">: {p.name} on GitHub</span>
-                      </a>
-                    )}
                   </div>
                 </SpotlightCard>
               </motion.li>

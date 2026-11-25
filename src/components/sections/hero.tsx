@@ -5,20 +5,22 @@ import { ArrowDown, ArrowRight, Download, Mail } from "lucide-react";
 import { heroPanels, profile } from "@/content/profile";
 import { gsap, MOTION_OK, useGSAP } from "@/lib/gsap";
 import { withBase } from "@/lib/site";
-import { GithubIcon, Icon, LinkedinIcon } from "../icons";
+import { Icon, LinkedinIcon } from "../icons";
 
 type SceneMode = "still" | "scrub" | "loop";
 
 /**
- * Maps a horizontal pointer position (0 = left edge, 1 = right edge) to a time in hero-scrub.mp4.
- * The clip looks left for ~0–1.2s, faces the viewer for ~1.2–3.2s and turns right for ~3.2–5.2s,
- * so the centre band is compressed onto the front-facing frames.
+ * Maps a horizontal pointer position (0 = left edge, 1 = right edge) to a time in hero-scrub.mp4
+ * so the character looks toward the cursor.
+ * The recorded clip turns from the viewer's right (early) through the camera (mid) to the left (late),
+ * so pointer X is inverted before mapping.
  */
 function pointerToTime(x: number) {
-  const lerp = (a: number, b: number, t: number) => a + (b - a) * Math.min(1, Math.max(0, t));
-  if (x < 0.42) return lerp(0.2, 1.2, x / 0.42);
-  if (x < 0.58) return lerp(1.2, 3.2, (x - 0.42) / 0.16);
-  return lerp(3.2, 5.2, (x - 0.58) / 0.42);
+  const t = 1 - Math.min(1, Math.max(0, x));
+  const lerp = (a: number, b: number, p: number) => a + (b - a) * p;
+  if (t < 0.42) return lerp(0.2, 1.2, t / 0.42);
+  if (t < 0.58) return lerp(1.2, 3.2, (t - 0.42) / 0.16);
+  return lerp(3.2, 5.2, (t - 0.58) / 0.42);
 }
 
 const FRONT_TIME = 2.0;
@@ -233,11 +235,6 @@ export function Hero() {
               <li>
                 <a href={profile.links.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn profile" className="grid h-9 w-9 place-items-center rounded-xl border border-white/20 bg-ink-950/40 text-white/85 backdrop-blur-md transition-colors hover:border-cyan/60 hover:text-white">
                   <LinkedinIcon className="h-4 w-4" />
-                </a>
-              </li>
-              <li>
-                <a href={profile.links.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub profile" className="grid h-9 w-9 place-items-center rounded-xl border border-white/20 bg-ink-950/40 text-white/85 backdrop-blur-md transition-colors hover:border-cyan/60 hover:text-white">
-                  <GithubIcon className="h-4 w-4" />
                 </a>
               </li>
               <li>
