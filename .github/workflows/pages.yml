@@ -26,12 +26,27 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
       - name: Synchronize all public WordPress articles
+        # The page also loads articles live from WordPress, so a temporary API outage should not block a deploy.
+        continue-on-error: true
         run: python scripts/sync_wordpress_posts.py
+      - name: Install dependencies
+        run: npm ci
+      - name: Build static site
+        env:
+          NEXT_PUBLIC_BASE_PATH: /naresh-palle-portfolio
+          NEXT_PUBLIC_SITE_URL: https://naresh-palle.github.io/naresh-palle-portfolio
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: npm run build
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: out
   deploy:
     environment:
       name: github-pages
