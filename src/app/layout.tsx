@@ -77,7 +77,7 @@ const jsonLd = {
       email: `mailto:${profile.email}`,
       address: { "@type": "PostalAddress", addressLocality: "Hyderabad", addressCountry: "IN" },
       alumniOf: { "@type": "CollegeOrUniversity", name: profile.education.institution, address: profile.education.location },
-      sameAs: [profile.links.linkedin, profile.links.github, profile.links.blog],
+      sameAs: [profile.links.linkedin, profile.links.blog],
       knowsAbout: skillGroups.flatMap((g) => g.skills).slice(0, 40),
     },
     {

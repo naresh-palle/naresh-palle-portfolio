@@ -14,7 +14,6 @@ export const profile = {
   },
   links: {
     linkedin: "https://linkedin.com/in/nareshpalle",
-    github: "https://github.com/naresh-palle",
     blog: "https://binaryblogs1.wordpress.com/",
   },
   education: {

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Info, Rocket, ShieldCheck, Target, Wrench } from "lucide-react";
 import { ArchitectureFlow } from "@/components/flow";
 import { EVIDENCE } from "@/components/flow/evidence";
-import { GithubIcon, Icon } from "@/components/icons";
+import { Icon } from "@/components/icons";
 import { Reveal } from "@/components/reveal";
 import { StatusBadge } from "@/components/status-badge";
 import { diagrams } from "@/content/diagrams";
@@ -70,7 +70,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
   const index = projects.findIndex((p) => p.slug === project.slug);
   const prev = projects[(index - 1 + projects.length) % projects.length];
   const next = projects[(index + 1) % projects.length];
-  const links = [...(project.links.github ?? []).map((l) => ({ ...l, github: true })), ...(project.links.articles ?? []).map((l) => ({ ...l, github: false }))];
+  const links = project.links.articles ?? [];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -107,17 +107,17 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
           </Reveal>
 
           <Reveal className="glass-strong rounded-[1.6rem] p-6">
-            <p className="font-mono text-[11px] tracking-[0.18em] text-mist uppercase">GitHub &amp; articles</p>
+            <p className="font-mono text-[11px] tracking-[0.18em] text-mist uppercase">Related articles</p>
             <div className="mt-4 flex flex-col gap-2.5">
               {links.map((l) => (
-                <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className={`${l.github ? "btn-primary" : "btn-ghost"} justify-between !text-[13px]`}>
+                <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="btn-ghost justify-between !text-[13px]">
                   <span className="inline-flex items-center gap-2">
-                    {l.github ? <GithubIcon className="h-4 w-4" /> : <BookOpen className="h-4 w-4" aria-hidden="true" />} {l.label}
+                    <BookOpen className="h-4 w-4" aria-hidden="true" /> {l.label}
                   </span>
                   <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden="true" />
                 </a>
               ))}
-              {!links.length && <p className="text-sm text-mist">No public links for this case study.</p>}
+              {!links.length && <p className="text-sm text-mist">No public article links for this case study.</p>}
             </div>
             {project.note && (
               <p className="mt-5 flex gap-2 border-t border-line pt-4 text-[12.5px] leading-relaxed text-mist">

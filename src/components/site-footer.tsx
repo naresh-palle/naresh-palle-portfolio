@@ -1,12 +1,11 @@
 import { profile } from "@/content/profile";
-import { GithubIcon, LinkedinIcon } from "./icons";
+import { LinkedinIcon } from "./icons";
 import { BookOpen, Mail } from "lucide-react";
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
   const links = [
     { href: profile.links.linkedin, label: "LinkedIn", icon: <LinkedinIcon className="h-4 w-4" /> },
-    { href: profile.links.github, label: "GitHub", icon: <GithubIcon className="h-4 w-4" /> },
     { href: profile.links.blog, label: "BinaryBlogs", icon: <BookOpen className="h-4 w-4" aria-hidden="true" /> },
     { href: `mailto:${profile.email}`, label: "Email", icon: <Mail className="h-4 w-4" aria-hidden="true" /> },
   ];

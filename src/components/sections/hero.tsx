@@ -5,7 +5,7 @@ import { ArrowDown, ArrowRight, Download, Mail } from "lucide-react";
 import { heroPanels, profile } from "@/content/profile";
 import { gsap, MOTION_OK, useGSAP } from "@/lib/gsap";
 import { withBase } from "@/lib/site";
-import { GithubIcon, Icon, LinkedinIcon } from "../icons";
+import { Icon, LinkedinIcon } from "../icons";
 
 type SceneMode = "still" | "scrub" | "loop";
 
@@ -235,11 +235,6 @@ export function Hero() {
               <li>
                 <a href={profile.links.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn profile" className="grid h-9 w-9 place-items-center rounded-xl border border-white/20 bg-ink-950/40 text-white/85 backdrop-blur-md transition-colors hover:border-cyan/60 hover:text-white">
                   <LinkedinIcon className="h-4 w-4" />
-                </a>
-              </li>
-              <li>
-                <a href={profile.links.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub profile" className="grid h-9 w-9 place-items-center rounded-xl border border-white/20 bg-ink-950/40 text-white/85 backdrop-blur-md transition-colors hover:border-cyan/60 hover:text-white">
-                  <GithubIcon className="h-4 w-4" />
                 </a>
               </li>
               <li>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ArrowUpRight, BookOpen, Check, Copy, Download, Mail, MapPin } from "lucide-react";
 import { profile } from "@/content/profile";
 import { withBase } from "@/lib/site";
-import { GithubIcon, LinkedinIcon } from "../icons";
+import { LinkedinIcon } from "../icons";
 import { Photo } from "../photo";
 import { Reveal } from "../reveal";
 
@@ -23,7 +23,6 @@ export function Contact() {
 
   const channels = [
     { href: profile.links.linkedin, label: "LinkedIn", value: "in/nareshpalle", icon: <LinkedinIcon className="h-5 w-5" /> },
-    { href: profile.links.github, label: "GitHub", value: "naresh-palle", icon: <GithubIcon className="h-5 w-5" /> },
     { href: profile.links.blog, label: "BinaryBlogs", value: "Technical writing", icon: <BookOpen className="h-5 w-5" aria-hidden="true" /> },
   ];
 
@@ -68,7 +67,7 @@ export function Contact() {
                   </a>
                 </div>
 
-                <ul className="mt-8 grid gap-3 sm:grid-cols-3">
+                <ul className="mt-8 grid gap-3 sm:grid-cols-2">
                   {channels.map((c) => (
                     <li key={c.label}>
                       <a
