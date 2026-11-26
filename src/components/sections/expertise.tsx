@@ -111,7 +111,7 @@ export function Expertise() {
           </div>
         </Reveal>
 
-        <Reveal as="ul" stagger={0.06} className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <Reveal as="ul" stagger={0.04} className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {skillGroups.map((g) => (
             <li key={g.id}>
               <SpotlightCard className="glass h-full rounded-2xl p-5">

@@ -68,14 +68,15 @@ function HeroScene() {
     const v = video.current;
     if (!v || !src || mode !== "scrub") return;
 
+    // Start facing the viewer — a slow turn from an off-angle on load looks like a bug.
     let target = FRONT_TIME;
-    let current = 0.2;
+    let current = FRONT_TIME;
     let frame = 0;
     let visible = true;
 
     const tick = () => {
-      current += (target - current) * 0.09;
-      if (!v.seeking && Math.abs(v.currentTime - current) > 1 / 48) v.currentTime = current;
+      current += (target - current) * 0.22;
+      if (!v.seeking && Math.abs(v.currentTime - current) > 1 / 30) v.currentTime = current;
       if (visible) frame = requestAnimationFrame(tick);
     };
     const onMove = (e: PointerEvent) => {
@@ -83,6 +84,8 @@ function HeroScene() {
     };
     const onLeave = () => (target = FRONT_TIME);
     const onReady = () => {
+      v.currentTime = FRONT_TIME;
+      current = FRONT_TIME;
       setReady(true);
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(tick);
@@ -131,7 +134,7 @@ function HeroScene() {
           autoPlay={mode === "loop"}
           loop={mode === "loop"}
           onLoadedData={() => setReady(true)}
-          className={`absolute inset-0 h-full w-full object-cover object-[62%_center] transition-opacity duration-700 ${ready ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 h-full w-full object-cover object-[62%_center] transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}
         />
       )}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_8%_18%,rgb(4_8_20/0.55),transparent_70%)]" />
@@ -149,23 +152,38 @@ export function Hero() {
     () => {
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
-        const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
-        tl.fromTo("[data-hero='hello']", { y: 20, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.7 }, 0.3)
-          .fromTo("[data-hero='role']", { yPercent: 110 }, { yPercent: 0, duration: 1.1, stagger: 0.12 }, "-=0.35")
+        const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
+        tl.fromTo("[data-hero='hello']", { y: 12, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4 }, 0.05)
+          .fromTo(
+            "[data-hero='role']",
+            { y: 18, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 0.45, stagger: 0.06, clearProps: "transform,opacity,visibility" },
+            "-=0.25",
+          )
           .fromTo(
             "[data-hero='cta'] > *",
-            { y: 16, autoAlpha: 0 },
-            { y: 0, autoAlpha: 1, duration: 0.6, stagger: 0.08, clearProps: "transform,opacity,visibility" },
-            "-=0.6",
+            { y: 12, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 0.35, stagger: 0.05, clearProps: "transform,opacity,visibility" },
+            "-=0.25",
           )
-          .fromTo("[data-hero='line']", { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.9, stagger: 0.12 }, "-=0.5")
-          .fromTo("[data-hero='panel']", { y: 14, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.5, stagger: 0.06 }, "-=0.6");
+          .fromTo(
+            "[data-hero='line']",
+            { y: 14, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 0.4, stagger: 0.05, clearProps: "transform,opacity,visibility" },
+            "-=0.2",
+          )
+          .fromTo(
+            "[data-hero='panel']",
+            { y: 10, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 0.35, stagger: 0.04, clearProps: "transform,opacity,visibility" },
+            "-=0.25",
+          );
 
+        // Soft parallax only — fading the hero copy to invisible on scroll looked broken.
         gsap.to("[data-hero='content']", {
-          yPercent: -8,
-          autoAlpha: 0,
+          yPercent: -4,
           ease: "none",
-          scrollTrigger: { trigger: root.current, start: "35% top", end: "bottom top", scrub: true },
+          scrollTrigger: { trigger: root.current, start: "40% top", end: "bottom top", scrub: true },
         });
       });
       return () => mm.revert();

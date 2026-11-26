@@ -21,14 +21,14 @@
   --font-display: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
 
-  --animate-float: float 7s ease-in-out infinite;
-  --animate-drift: drift 22s ease-in-out infinite alternate;
-  --animate-pulse-ring: pulse-ring 3.2s ease-out infinite;
+  --animate-float: float 5.5s ease-in-out infinite;
+  --animate-drift: drift 28s ease-in-out infinite alternate;
+  --animate-pulse-ring: pulse-ring 2.6s ease-out infinite;
   --animate-dash: dash 2.4s linear infinite;
 
   @keyframes float {
     0%, 100% { transform: translate3d(0, 0, 0); }
-    50% { transform: translate3d(0, -10px, 0); }
+    50% { transform: translate3d(0, -6px, 0); }
   }
   @keyframes drift {
     0% { transform: translate3d(-4%, -2%, 0) scale(1); }

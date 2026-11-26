@@ -14,7 +14,7 @@ export function SectionHeading({
   id?: string;
 }) {
   return (
-    <Reveal stagger={0.09} className="mb-12 grid gap-5 md:mb-16 md:grid-cols-[1.1fr_0.9fr] md:items-end">
+    <Reveal stagger={0.05} className="mb-12 grid gap-5 md:mb-16 md:grid-cols-[1.1fr_0.9fr] md:items-end">
       <div>
         <span className="eyebrow">
           <span className="text-mist">{index}</span>
