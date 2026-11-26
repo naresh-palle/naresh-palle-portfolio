@@ -4,7 +4,7 @@ export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH?.replace(/\/$/, "") |
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ||
   process.env.CF_PAGES_URL ||
-  "https://naresh-palle.github.io/naresh-palle-portfolio"
+  "https://naresh-palle-portfolio.pages.dev"
 ).replace(/\/$/, "");
 
 /** Prefix a public-folder path with the deployment base path. next/link and next/image do this automatically; plain <a>, <img> and fetch() do not. */

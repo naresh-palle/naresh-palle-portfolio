@@ -9,7 +9,9 @@
 - `posts.json`: generated automatically during deployment; it is not checked in by default.
 
 ## Publish to Cloudflare Pages
-Production branch: `main`. Build command: `npm run build`. The static export is written to `out` (`wrangler.toml` sets `pages_build_output_dir`). Node 20 is selected by `.node-version`. Leave the base path empty so assets load from the domain root.
+Live site: https://naresh-palle-portfolio.pages.dev
+
+Production branch: `main`. Build command: `npm run build`. The static export is written to `out` (`wrangler.toml` sets `pages_build_output_dir`). Node 20 is selected by `.node-version`. Leave the base path empty so assets load from the domain root. GitHub Pages is not used.
 
 The GitHub workflow runs on every push to `main` and weekly. It refreshes public WordPress posts and confirms `out/index.html` builds. It does not edit or delete content on WordPress.
 
