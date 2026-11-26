@@ -10,17 +10,18 @@ import { Icon, LinkedinIcon } from "../icons";
 
 type SceneMode = "still" | "scrub" | "loop";
 
-// hero-scrub.mp4, checked frame by frame:
-// ~2.25 faces the camera, later times (~4.9) turn to the viewer's left.
-// Early times (<1.5) look down at the laptop, so right-side tracking holds front pose with a subtle 3D tilt.
-const LOOK_FRONT = 2.25;
+// Clip timeline:
+// ~1.5 - 2.2: character faces center / camera
+// ~4.5 - 5.5: character turns to the viewer's left
+// When cursor moves left -> character turns to viewer's left (~4.9s)
+// When cursor moves right -> character faces camera (~1.8s)
 const LOOK_LEFT = 4.9;
+const LOOK_RIGHT = 1.8;
 
-/** Cursor X (0 = left edge, 1 = right edge) maps left half to video turn and right half to subtle 3D tilt. */
 function pointerToTime(x: number) {
   const p = Math.min(1, Math.max(0, x));
-  if (p <= 0.5) return LOOK_LEFT + ((LOOK_FRONT - LOOK_LEFT) * p) / 0.5;
-  return LOOK_FRONT;
+  // Smoothly interpolate across the entire width
+  return LOOK_LEFT + (LOOK_RIGHT - LOOK_LEFT) * p;
 }
 
 function useSceneMode(): SceneMode {
@@ -72,10 +73,9 @@ function HeroScene() {
 
     // Paint only inside `seeked`. Drawing earlier (or on a later video-frame callback) keeps an old
     // picture on screen while currentTime has already moved, so the face looks the wrong way.
-    let target = LOOK_FRONT;
-    let eased = LOOK_FRONT;
-    let targetTilt = 0;
-    let easedTilt = 0;
+    const DEFAULT_TIME = 2.0;
+    let target = DEFAULT_TIME;
+    let eased = DEFAULT_TIME;
     let shown = -1;
     let pending: number | null = null;
     let busy = false;
@@ -111,7 +111,7 @@ function HeroScene() {
         pending = next;
         return;
       }
-      if (Math.abs(next - shown) < 1 / 24) return;
+      if (Math.abs(next - shown) < 1 / 30) return;
       busy = true;
       let settled = false;
       const finish = (fromSeek: boolean) => {
@@ -123,14 +123,13 @@ function HeroScene() {
           busy = false;
           return;
         }
-        // A timeout means the frame is not ready. Unlock and try again; never draw the previous pose.
         if (fromSeek) {
           paint();
           shown = v.currentTime;
           setReady(true);
         }
         busy = false;
-        if (pending != null && Math.abs(pending - shown) >= 1 / 24) {
+        if (pending != null && Math.abs(pending - shown) >= 1 / 30) {
           const follow = pending;
           pending = null;
           seek(follow);
@@ -139,40 +138,31 @@ function HeroScene() {
         }
       };
       const onSeeked = () => finish(true);
-      const timer = window.setTimeout(() => finish(false), 180);
+      const timer = window.setTimeout(() => finish(false), 90);
       v.addEventListener("seeked", onSeeked);
       v.currentTime = next;
     };
 
     const tick = () => {
-      eased += (target - eased) * 0.62;
-      easedTilt += (targetTilt - easedTilt) * 0.18;
-      if (visible) {
-        seek(eased);
-        surface.style.transform =
-          Math.abs(easedTilt) > 0.02
-            ? `perspective(1200px) rotateY(${easedTilt.toFixed(2)}deg) scale(1.03)`
-            : "";
-      }
+      // Very snappy easing so animation immediately tracks fast mouse movement
+      eased += (target - eased) * 0.85;
+      if (visible) seek(eased);
       frame = requestAnimationFrame(tick);
     };
 
     const onMove = (e: PointerEvent) => {
       if (e.pointerType !== "mouse") return;
       tracking = true;
-      const p = Math.min(1, Math.max(0, e.clientX / window.innerWidth));
-      target = pointerToTime(p);
-      targetTilt = p > 0.5 ? ((p - 0.5) / 0.5) * 6 : 0;
+      target = pointerToTime(e.clientX / window.innerWidth);
     };
     const onLeave = () => {
       if (!tracking) return;
       tracking = false;
-      target = LOOK_FRONT;
-      targetTilt = 0;
+      target = DEFAULT_TIME;
     };
     const onReady = () => {
       v.pause();
-      seek(LOOK_FRONT);
+      seek(DEFAULT_TIME);
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(tick);
     };
