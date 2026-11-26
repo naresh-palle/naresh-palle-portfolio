@@ -2,33 +2,30 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowRight, Download, Mail } from "lucide-react";
-import { heroPanels, profile } from "@/content/profile";
+import { profile } from "@/content/profile";
+import { skillGroups } from "@/content/skills";
 import { gsap, MOTION_OK, useGSAP } from "@/lib/gsap";
 import { withBase } from "@/lib/site";
 import { Icon, LinkedinIcon } from "../icons";
 
 type SceneMode = "still" | "scrub" | "loop";
 
-// Clip timeline: look left (~0.2–1.0) → face camera (~2.2–3.0) → look right (~4.6–5.4).
-const FRONT_TIME = 2.4;
+// Verified frame by frame on hero-scrub.mp4:
+// ~0.45–0.90 look to the viewer's left, ~2.0–2.6 face the camera, ~3.6–5.5 look to the viewer's right.
+// The opening frames look down at the laptop, so the left hold starts after that.
+const FRONT_TIME = 2.25;
 
 /**
- * Maps horizontal pointer position (0 = left edge, 1 = right edge) to a time in hero-scrub.mp4.
- * Wide side plateaus keep the head looking that way until the cursor actually crosses center —
- * the old inverted/narrow map sought into look-down-at-laptop frames and felt broken.
+ * Cursor X (0 = left edge, 1 = right edge) → clip time.
+ * Each outer third of the screen stays inside frames that look that way and holds there.
  */
 function pointerToTime(x: number) {
   const p = Math.min(1, Math.max(0, x));
   const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-
-  // Left ~38%: hold left look (avoid settling on the deepest laptop glance).
-  if (p < 0.38) return lerp(0.25, 0.95, p / 0.38);
-  // Soft turn into center.
-  if (p < 0.5) return lerp(0.95, FRONT_TIME, (p - 0.38) / 0.12);
-  // Soft turn out of center toward the right.
-  if (p < 0.62) return lerp(FRONT_TIME, 4.55, (p - 0.5) / 0.12);
-  // Right ~38%: hold right look until the cursor moves back left.
-  return lerp(4.55, 5.45, (p - 0.62) / 0.38);
+  if (p < 0.32) return lerp(0.48, 0.88, p / 0.32);
+  if (p < 0.5) return lerp(0.88, FRONT_TIME, (p - 0.32) / 0.18);
+  if (p < 0.68) return lerp(FRONT_TIME, 4.35, (p - 0.5) / 0.18);
+  return lerp(4.35, 5.35, (p - 0.68) / 0.32);
 }
 
 function useSceneMode(): SceneMode {
@@ -45,6 +42,7 @@ function useSceneMode(): SceneMode {
 function HeroScene() {
   const mode = useSceneMode();
   const video = useRef<HTMLVideoElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
   const [src, setSrc] = useState<string>();
 
@@ -72,58 +70,118 @@ function HeroScene() {
 
   useEffect(() => {
     const v = video.current;
-    if (!v || !src || mode !== "scrub") return;
+    const surface = canvas.current;
+    if (!v || !surface || !src || mode !== "scrub") return;
+    const ctx = surface.getContext("2d", { alpha: false });
+    if (!ctx) return;
 
-    // Start facing the viewer — a slow turn from an off-angle on load looks like a bug.
+    // A paused <video> often keeps painting frame 0 (the left look) no matter what currentTime is set to.
+    // Drawing the decoded frame onto a canvas after each completed seek is what actually changes the face.
     let target = FRONT_TIME;
-    let current = FRONT_TIME;
+    let eased = FRONT_TIME;
+    let shown = -1;
+    let busy = false;
     let frame = 0;
     let visible = true;
     let tracking = false;
+    let alive = true;
+
+    const paint = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.max(1, Math.round(surface.clientWidth * dpr));
+      const h = Math.max(1, Math.round(surface.clientHeight * dpr));
+      if (surface.width !== w || surface.height !== h) {
+        surface.width = w;
+        surface.height = h;
+      }
+      const vw = v.videoWidth;
+      const vh = v.videoHeight;
+      if (!vw || !vh) return;
+      const scale = Math.max(w / vw, h / vh);
+      const dw = vw * scale;
+      const dh = vh * scale;
+      ctx.drawImage(v, (w - dw) * 0.62, (h - dh) * 0.5, dw, dh);
+    };
+
+    const seek = (time: number) => {
+      if (!alive || busy) return;
+      const duration = Number.isFinite(v.duration) ? v.duration : 5.9;
+      const next = Math.min(Math.max(time, 0.08), Math.max(duration - 0.08, 0.08));
+      if (Math.abs(next - shown) < 1 / 24) return;
+      busy = true;
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        v.removeEventListener("seeked", finish);
+        busy = false;
+        if (!alive || Math.abs(v.currentTime - next) > 0.2) return;
+        // currentTime updates before the decoded picture does. Paint on the frame that is actually presented.
+        const draw = () => {
+          if (!alive) return;
+          paint();
+          shown = v.currentTime;
+          setReady(true);
+        };
+        const videoWithFrame = v as HTMLVideoElement & { requestVideoFrameCallback?: (cb: () => void) => number };
+        if (videoWithFrame.requestVideoFrameCallback) videoWithFrame.requestVideoFrameCallback(() => draw());
+        else requestAnimationFrame(draw);
+      };
+      v.addEventListener("seeked", finish);
+      // If seeked never arrives, allow another attempt. Do not paint — that was sticking the left-looking frame on screen.
+      window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        v.removeEventListener("seeked", finish);
+        busy = false;
+      }, 420);
+      v.currentTime = next;
+    };
 
     const tick = () => {
-      current += (target - current) * 0.18;
-      if (!v.seeking && Math.abs(v.currentTime - current) > 1 / 30) {
-        v.currentTime = Math.min(Math.max(current, 0.05), Math.max(v.duration - 0.05, 0.05) || current);
-      }
-      if (visible) frame = requestAnimationFrame(tick);
+      eased += (target - eased) * 0.28;
+      if (visible) seek(eased);
+      frame = requestAnimationFrame(tick);
     };
+
     const onMove = (e: PointerEvent) => {
       if (e.pointerType !== "mouse") return;
       tracking = true;
       target = pointerToTime(e.clientX / window.innerWidth);
     };
-    // Only return to front when the pointer leaves the window — never while it stays on a side.
     const onLeave = () => {
       if (!tracking) return;
       tracking = false;
       target = FRONT_TIME;
     };
     const onReady = () => {
-      v.currentTime = FRONT_TIME;
-      current = FRONT_TIME;
-      target = FRONT_TIME;
-      setReady(true);
+      v.pause();
+      seek(FRONT_TIME);
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(tick);
     };
+
     const io = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
-      cancelAnimationFrame(frame);
-      if (visible && v.readyState >= 2) frame = requestAnimationFrame(tick);
     });
+    const onResize = () => {
+      if (shown >= 0) paint();
+    };
 
-    io.observe(v);
+    io.observe(surface);
     window.addEventListener("pointermove", onMove, { passive: true });
     document.documentElement.addEventListener("pointerleave", onLeave);
+    window.addEventListener("resize", onResize);
     if (v.readyState >= 2) onReady();
     else v.addEventListener("loadeddata", onReady, { once: true });
 
     return () => {
+      alive = false;
       cancelAnimationFrame(frame);
       io.disconnect();
       window.removeEventListener("pointermove", onMove);
       document.documentElement.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("resize", onResize);
       v.removeEventListener("loadeddata", onReady);
     };
   }, [mode, src]);
@@ -140,19 +198,27 @@ function HeroScene() {
         fetchPriority="high"
         className="absolute inset-0 h-full w-full object-cover object-[62%_center]"
       />
-      {src && (
+      {src && mode === "loop" && (
         <video
-          ref={video}
           key={src}
           src={src}
           muted
           playsInline
           preload="auto"
-          autoPlay={mode === "loop"}
-          loop={mode === "loop"}
+          autoPlay
+          loop
           onLoadedData={() => setReady(true)}
           className={`absolute inset-0 h-full w-full object-cover object-[62%_center] transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}
         />
+      )}
+      {src && mode === "scrub" && (
+        <>
+          <video ref={video} key={src} src={src} muted playsInline preload="auto" className="pointer-events-none absolute inset-0 h-full w-full opacity-0" />
+          <canvas
+            ref={canvas}
+            className={`absolute inset-0 h-full w-full transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}
+          />
+        </>
       )}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_8%_18%,rgb(4_8_20/0.55),transparent_70%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_96%_92%,rgb(4_8_20/0.55),transparent_70%)]" />
@@ -252,17 +318,17 @@ export function Hero() {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="order-2 lg:order-1">
             <ul className="hidden max-w-xl flex-wrap gap-2 [text-shadow:none] md:flex" aria-label="Core focus areas">
-              {heroPanels.map((panel) => (
+              {skillGroups.map((group) => (
                 <li
-                  key={panel.label}
+                  key={group.id}
                   data-hero="panel"
-                  title={panel.detail}
+                  title={group.skills.join(" · ")}
                   className="flex items-center gap-2 rounded-full border border-white/15 bg-ink-950/45 py-1.5 pr-3.5 pl-1.5 text-[12px] font-medium text-white backdrop-blur-md"
                 >
                   <span className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-cyan/30 to-violet/30 text-cyan-soft">
-                    <Icon name={panel.icon} className="h-3.5 w-3.5" />
+                    <Icon name={group.icon} className="h-3.5 w-3.5" />
                   </span>
-                  {panel.label}
+                  {group.short}
                 </li>
               ))}
             </ul>

@@ -129,12 +129,11 @@ export function Expertise() {
                     <span className="text-sm font-semibold text-white">{g.title}</span>
                   </span>
                   <span className="mt-3 flex flex-wrap gap-1.5">
-                    {g.skills.slice(0, 5).map((s) => (
+                    {g.skills.map((s) => (
                       <span key={s} className="chip !px-2.5 !py-0.5 !text-[11px]">
                         {s}
                       </span>
                     ))}
-                    {g.skills.length > 5 && <span className="chip !px-2.5 !py-0.5 !text-[11px] !text-cyan-soft">+{g.skills.length - 5}</span>}
                   </span>
                 </button>
               </SpotlightCard>
