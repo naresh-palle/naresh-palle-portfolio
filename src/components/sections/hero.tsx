@@ -10,22 +10,17 @@ import { Icon, LinkedinIcon } from "../icons";
 
 type SceneMode = "still" | "scrub" | "loop";
 
-// Verified frame by frame on hero-scrub.mp4:
-// ~0.45–0.90 look to the viewer's left, ~2.0–2.6 face the camera, ~3.6–5.5 look to the viewer's right.
-// The opening frames look down at the laptop, so the left hold starts after that.
-const FRONT_TIME = 2.25;
+// hero-scrub.mp4, checked frame by frame:
+// early times look to the viewer's left, ~2.25 faces the camera, later times look to the viewer's right.
+const LOOK_LEFT = 0.62;
+const LOOK_FRONT = 2.25;
+const LOOK_RIGHT = 4.9;
 
-/**
- * Cursor X (0 = left edge, 1 = right edge) → clip time.
- * Each outer third of the screen stays inside frames that look that way and holds there.
- */
+/** Cursor X (0 = left edge, 1 = right edge) maps straight across that turn. */
 function pointerToTime(x: number) {
   const p = Math.min(1, Math.max(0, x));
-  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-  if (p < 0.32) return lerp(0.48, 0.88, p / 0.32);
-  if (p < 0.5) return lerp(0.88, FRONT_TIME, (p - 0.32) / 0.18);
-  if (p < 0.68) return lerp(FRONT_TIME, 4.35, (p - 0.5) / 0.18);
-  return lerp(4.35, 5.35, (p - 0.68) / 0.32);
+  if (p <= 0.5) return LOOK_LEFT + ((LOOK_FRONT - LOOK_LEFT) * p) / 0.5;
+  return LOOK_FRONT + ((LOOK_RIGHT - LOOK_FRONT) * (p - 0.5)) / 0.5;
 }
 
 function useSceneMode(): SceneMode {
@@ -75,11 +70,12 @@ function HeroScene() {
     const ctx = surface.getContext("2d", { alpha: false });
     if (!ctx) return;
 
-    // A paused <video> often keeps painting frame 0 (the left look) no matter what currentTime is set to.
-    // Drawing the decoded frame onto a canvas after each completed seek is what actually changes the face.
-    let target = FRONT_TIME;
-    let eased = FRONT_TIME;
+    // Paint only inside `seeked`. Drawing earlier (or on a later video-frame callback) keeps an old
+    // picture on screen while currentTime has already moved, so the face looks the wrong way.
+    let target = LOOK_FRONT;
+    let eased = LOOK_FRONT;
     let shown = -1;
+    let pending: number | null = null;
     let busy = false;
     let frame = 0;
     let visible = true;
@@ -97,6 +93,8 @@ function HeroScene() {
       const vw = v.videoWidth;
       const vh = v.videoHeight;
       if (!vw || !vh) return;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
       const scale = Math.max(w / vw, h / vh);
       const dw = vw * scale;
       const dh = vh * scale;
@@ -104,42 +102,48 @@ function HeroScene() {
     };
 
     const seek = (time: number) => {
-      if (!alive || busy) return;
+      if (!alive) return;
       const duration = Number.isFinite(v.duration) ? v.duration : 5.9;
       const next = Math.min(Math.max(time, 0.08), Math.max(duration - 0.08, 0.08));
+      if (busy) {
+        pending = next;
+        return;
+      }
       if (Math.abs(next - shown) < 1 / 24) return;
       busy = true;
       let settled = false;
-      const finish = () => {
+      const finish = (fromSeek: boolean) => {
         if (settled) return;
         settled = true;
-        v.removeEventListener("seeked", finish);
-        busy = false;
-        if (!alive || Math.abs(v.currentTime - next) > 0.2) return;
-        // currentTime updates before the decoded picture does. Paint on the frame that is actually presented.
-        const draw = () => {
-          if (!alive) return;
+        v.removeEventListener("seeked", onSeeked);
+        window.clearTimeout(timer);
+        if (!alive) {
+          busy = false;
+          return;
+        }
+        // A timeout means the frame is not ready. Unlock and try again; never draw the previous pose.
+        if (fromSeek) {
           paint();
           shown = v.currentTime;
           setReady(true);
-        };
-        const videoWithFrame = v as HTMLVideoElement & { requestVideoFrameCallback?: (cb: () => void) => number };
-        if (videoWithFrame.requestVideoFrameCallback) videoWithFrame.requestVideoFrameCallback(() => draw());
-        else requestAnimationFrame(draw);
-      };
-      v.addEventListener("seeked", finish);
-      // If seeked never arrives, allow another attempt. Do not paint — that was sticking the left-looking frame on screen.
-      window.setTimeout(() => {
-        if (settled) return;
-        settled = true;
-        v.removeEventListener("seeked", finish);
+        }
         busy = false;
-      }, 420);
+        if (pending != null && Math.abs(pending - shown) >= 1 / 24) {
+          const follow = pending;
+          pending = null;
+          seek(follow);
+        } else {
+          pending = null;
+        }
+      };
+      const onSeeked = () => finish(true);
+      const timer = window.setTimeout(() => finish(false), 180);
+      v.addEventListener("seeked", onSeeked);
       v.currentTime = next;
     };
 
     const tick = () => {
-      eased += (target - eased) * 0.28;
+      eased += (target - eased) * 0.62;
       if (visible) seek(eased);
       frame = requestAnimationFrame(tick);
     };
@@ -152,11 +156,11 @@ function HeroScene() {
     const onLeave = () => {
       if (!tracking) return;
       tracking = false;
-      target = FRONT_TIME;
+      target = LOOK_FRONT;
     };
     const onReady = () => {
       v.pause();
-      seek(FRONT_TIME);
+      seek(LOOK_FRONT);
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(tick);
     };
