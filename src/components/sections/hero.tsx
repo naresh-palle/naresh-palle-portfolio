@@ -9,21 +9,27 @@ import { Icon, LinkedinIcon } from "../icons";
 
 type SceneMode = "still" | "scrub" | "loop";
 
+// Clip timeline: look left (~0.2–1.0) → face camera (~2.2–3.0) → look right (~4.6–5.4).
+const FRONT_TIME = 2.4;
+
 /**
- * Maps a horizontal pointer position (0 = left edge, 1 = right edge) to a time in hero-scrub.mp4
- * so the character looks toward the cursor.
- * The recorded clip turns from the viewer's right (early) through the camera (mid) to the left (late),
- * so pointer X is inverted before mapping.
+ * Maps horizontal pointer position (0 = left edge, 1 = right edge) to a time in hero-scrub.mp4.
+ * Wide side plateaus keep the head looking that way until the cursor actually crosses center —
+ * the old inverted/narrow map sought into look-down-at-laptop frames and felt broken.
  */
 function pointerToTime(x: number) {
-  const t = 1 - Math.min(1, Math.max(0, x));
-  const lerp = (a: number, b: number, p: number) => a + (b - a) * p;
-  if (t < 0.42) return lerp(0.2, 1.2, t / 0.42);
-  if (t < 0.58) return lerp(1.2, 3.2, (t - 0.42) / 0.16);
-  return lerp(3.2, 5.2, (t - 0.58) / 0.42);
-}
+  const p = Math.min(1, Math.max(0, x));
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-const FRONT_TIME = 2.0;
+  // Left ~38%: hold left look (avoid settling on the deepest laptop glance).
+  if (p < 0.38) return lerp(0.25, 0.95, p / 0.38);
+  // Soft turn into center.
+  if (p < 0.5) return lerp(0.95, FRONT_TIME, (p - 0.38) / 0.12);
+  // Soft turn out of center toward the right.
+  if (p < 0.62) return lerp(FRONT_TIME, 4.55, (p - 0.5) / 0.12);
+  // Right ~38%: hold right look until the cursor moves back left.
+  return lerp(4.55, 5.45, (p - 0.62) / 0.38);
+}
 
 function useSceneMode(): SceneMode {
   const [mode, setMode] = useState<SceneMode>("still");
@@ -73,19 +79,30 @@ function HeroScene() {
     let current = FRONT_TIME;
     let frame = 0;
     let visible = true;
+    let tracking = false;
 
     const tick = () => {
-      current += (target - current) * 0.22;
-      if (!v.seeking && Math.abs(v.currentTime - current) > 1 / 30) v.currentTime = current;
+      current += (target - current) * 0.18;
+      if (!v.seeking && Math.abs(v.currentTime - current) > 1 / 30) {
+        v.currentTime = Math.min(Math.max(current, 0.05), Math.max(v.duration - 0.05, 0.05) || current);
+      }
       if (visible) frame = requestAnimationFrame(tick);
     };
     const onMove = (e: PointerEvent) => {
-      if (e.pointerType === "mouse") target = pointerToTime(e.clientX / window.innerWidth);
+      if (e.pointerType !== "mouse") return;
+      tracking = true;
+      target = pointerToTime(e.clientX / window.innerWidth);
     };
-    const onLeave = () => (target = FRONT_TIME);
+    // Only return to front when the pointer leaves the window — never while it stays on a side.
+    const onLeave = () => {
+      if (!tracking) return;
+      tracking = false;
+      target = FRONT_TIME;
+    };
     const onReady = () => {
       v.currentTime = FRONT_TIME;
       current = FRONT_TIME;
+      target = FRONT_TIME;
       setReady(true);
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(tick);
