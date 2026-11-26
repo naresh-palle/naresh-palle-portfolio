@@ -11,10 +11,10 @@ import { Icon, LinkedinIcon } from "../icons";
 type SceneMode = "still" | "scrub" | "loop";
 
 // hero-scrub.mp4, checked frame by frame:
-// early times look to the viewer's left, ~2.25 faces the camera, later times look to the viewer's right.
-const LOOK_LEFT = 0.62;
+// early times look to the viewer's right, ~2.25 faces the camera, later times look to the viewer's left.
+const LOOK_LEFT = 4.9;
 const LOOK_FRONT = 2.25;
-const LOOK_RIGHT = 4.9;
+const LOOK_RIGHT = 0.62;
 
 /** Cursor X (0 = left edge, 1 = right edge) maps straight across that turn. */
 function pointerToTime(x: number) {
