@@ -32,7 +32,7 @@ export function About() {
           </Reveal>
 
           <div>
-            <Reveal stagger={0.1} className="space-y-5 text-[16.5px] leading-relaxed text-haze">
+            <Reveal stagger={0.05} className="space-y-5 text-[16.5px] leading-relaxed text-haze">
               <p>
                 I&apos;m <strong className="text-white">{profile.name}</strong> — a technology professional with{" "}
                 <strong className="text-white">12+ years of IT experience</strong> across quality engineering, DevOps, cloud-native platforms, and
@@ -49,7 +49,7 @@ export function About() {
               </p>
             </Reveal>
 
-            <Reveal stagger={0.08} className="mt-10 grid grid-cols-3 gap-3">
+            <Reveal stagger={0.04} className="mt-10 grid grid-cols-3 gap-3">
               {aboutStats.map((s) => (
                 <div key={s.label} className="glass rounded-2xl px-4 py-5 text-center">
                   <p className="font-display text-3xl font-bold text-gradient md:text-4xl">{s.value}</p>
@@ -58,7 +58,7 @@ export function About() {
               ))}
             </Reveal>
 
-            <Reveal as="ul" stagger={0.07} className="mt-10 grid gap-3 sm:grid-cols-2">
+            <Reveal as="ul" stagger={0.04} className="mt-10 grid gap-3 sm:grid-cols-2">
               {aboutPillars.map((p, i) => (
                 <li
                   key={p.title}

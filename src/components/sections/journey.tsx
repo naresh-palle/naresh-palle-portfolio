@@ -16,23 +16,34 @@ export function Journey() {
         gsap.fromTo(
           "[data-journey='progress']",
           { scaleY: 0 },
-          { scaleY: 1, ease: "none", scrollTrigger: { trigger: root.current, start: "top 70%", end: "bottom 60%", scrub: 0.6 } },
+          { scaleY: 1, ease: "none", scrollTrigger: { trigger: root.current, start: "top 75%", end: "bottom 55%", scrub: 0.35 } },
         );
         gsap.utils.toArray<HTMLElement>("[data-journey='item']").forEach((item) => {
           const fromLeft = item.dataset.side === "left";
-          gsap.from(item.querySelector("[data-journey='card']"), {
-            x: fromLeft ? -40 : 40,
-            autoAlpha: 0,
-            duration: 0.9,
-            ease: "power3.out",
-            scrollTrigger: { trigger: item, start: "top 80%", once: true },
-          });
-          gsap.from(item.querySelector("[data-journey='node']"), {
-            scale: 0,
-            duration: 0.6,
-            ease: "back.out(2)",
-            scrollTrigger: { trigger: item, start: "top 78%", once: true },
-          });
+          gsap.fromTo(
+            item.querySelector("[data-journey='card']"),
+            { x: fromLeft ? -20 : 20, autoAlpha: 0 },
+            {
+              x: 0,
+              autoAlpha: 1,
+              duration: 0.45,
+              ease: "power2.out",
+              clearProps: "transform,opacity,visibility",
+              scrollTrigger: { trigger: item, start: "top 85%", once: true },
+            },
+          );
+          gsap.fromTo(
+            item.querySelector("[data-journey='node']"),
+            { scale: 0.7, autoAlpha: 0 },
+            {
+              scale: 1,
+              autoAlpha: 1,
+              duration: 0.35,
+              ease: "power2.out",
+              clearProps: "transform,opacity,visibility",
+              scrollTrigger: { trigger: item, start: "top 85%", once: true },
+            },
+          );
         });
       });
       return () => mm.revert();

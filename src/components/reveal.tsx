@@ -13,7 +13,7 @@ type RevealProps = {
   delay?: number;
 };
 
-export function Reveal({ children, as: Tag = "div", className, stagger, y = 28, delay = 0 }: RevealProps) {
+export function Reveal({ children, as: Tag = "div", className, stagger, y = 16, delay = 0 }: RevealProps) {
   const ref = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -23,20 +23,19 @@ export function Reveal({ children, as: Tag = "div", className, stagger, y = 28, 
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
         const targets = stagger ? Array.from(el.children) : [el];
-        // fromTo with explicit end values: children with CSS transitions would otherwise report a mid-transition opacity as the target.
+        // Short fade/slide only — no blur. Blur + long duration reads as laggy or broken.
         gsap.fromTo(
           targets,
-          { y, autoAlpha: 0, filter: "blur(6px)" },
+          { y, autoAlpha: 0 },
           {
             y: 0,
             autoAlpha: 1,
-            filter: "blur(0px)",
-            duration: 0.9,
+            duration: 0.45,
             delay,
-            ease: "power3.out",
+            ease: "power2.out",
             stagger: stagger ?? 0,
-            clearProps: "filter,transform,opacity,visibility",
-            scrollTrigger: { trigger: el, start: "top 86%", once: true },
+            clearProps: "transform,opacity,visibility",
+            scrollTrigger: { trigger: el, start: "top 88%", once: true },
           },
         );
       });
