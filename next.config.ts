@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// GitHub Pages serves this site from /naresh-palle-portfolio; Cloudflare Pages serves it from the domain root.
+// Cloudflare Pages serves the site from the domain root, so the base path stays empty unless one is set.
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH?.replace(/\/$/, "") || "";
 
 const nextConfig: NextConfig = {

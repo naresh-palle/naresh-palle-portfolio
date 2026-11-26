@@ -23,14 +23,6 @@ export const profile = {
   },
 } as const;
 
-export const heroPanels = [
-  { label: "Quality Engineering", detail: "Selenium · Playwright · Robot", icon: "ShieldCheck" },
-  { label: "DevOps & Automation", detail: "Jenkins · GitLab · Argo CD", icon: "Workflow" },
-  { label: "Cloud & Kubernetes", detail: "AWS EKS · OpenShift · Helm", icon: "Cloud" },
-  { label: "AI Architecture & LLMs", detail: "RAG · Agents · n8n", icon: "BrainCircuit" },
-  { label: "DevSecOps", detail: "Trivy · Harbor · ECR", icon: "Lock" },
-] as const;
-
 export const navItems = [
   { id: "about", label: "About" },
   { id: "expertise", label: "Expertise" },

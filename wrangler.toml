@@ -1,0 +1,5 @@
+# Cloudflare Pages Git builds publish this static export.
+# Dashboard build command: npm run build
+# `name` is left unset so it keeps the project name already configured in Cloudflare.
+compatibility_date = "2026-11-26"
+pages_build_output_dir = "./out"

@@ -1,6 +1,8 @@
 export type SkillGroup = {
   id: string;
   title: string;
+  /** Short label used on the hero chips. */
+  short: string;
   icon: "ShieldCheck" | "Cloud" | "Terminal" | "Lock" | "BrainCircuit" | "Activity";
   blurb: string;
   accent: "cyan" | "blue" | "purple";
@@ -11,6 +13,7 @@ export const skillGroups: SkillGroup[] = [
   {
     id: "quality",
     title: "Quality Engineering",
+    short: "Quality",
     icon: "ShieldCheck",
     blurb: "Test strategy, automation frameworks and quality gates that keep releases predictable.",
     accent: "cyan",
@@ -31,6 +34,7 @@ export const skillGroups: SkillGroup[] = [
   {
     id: "devops",
     title: "DevOps & Cloud",
+    short: "DevOps",
     icon: "Cloud",
     blurb: "Cloud platforms, container orchestration and delivery pipelines from commit to production.",
     accent: "blue",
@@ -44,6 +48,7 @@ export const skillGroups: SkillGroup[] = [
       "OpenShift",
       "Docker",
       "Helm",
+      "Git",
       "Jenkins",
       "GitLab",
       "Argo CD",
@@ -53,6 +58,7 @@ export const skillGroups: SkillGroup[] = [
   {
     id: "iac",
     title: "Infrastructure Automation",
+    short: "Infrastructure",
     icon: "Terminal",
     blurb: "Repeatable, version-controlled infrastructure and configuration.",
     accent: "purple",
@@ -61,6 +67,7 @@ export const skillGroups: SkillGroup[] = [
   {
     id: "devsecops",
     title: "DevSecOps",
+    short: "DevSecOps",
     icon: "Lock",
     blurb: "Security built into the pipeline: image scanning, registries and automated checks.",
     accent: "cyan",
@@ -76,6 +83,7 @@ export const skillGroups: SkillGroup[] = [
   {
     id: "ai",
     title: "AI & Intelligent Automation",
+    short: "AI Automation",
     icon: "BrainCircuit",
     blurb: "LLM applications, agents and workflow automation designed for real operational use.",
     accent: "purple",
@@ -97,6 +105,7 @@ export const skillGroups: SkillGroup[] = [
   {
     id: "observability",
     title: "Observability & Data",
+    short: "Observability",
     icon: "Activity",
     blurb: "Metrics, logs and data stores used to investigate incidents and find root causes.",
     accent: "blue",
