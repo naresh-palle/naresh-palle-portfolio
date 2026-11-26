@@ -11,16 +11,16 @@ import { Icon, LinkedinIcon } from "../icons";
 type SceneMode = "still" | "scrub" | "loop";
 
 // hero-scrub.mp4, checked frame by frame:
-// early times look to the viewer's right, ~2.25 faces the camera, later times look to the viewer's left.
-const LOOK_LEFT = 4.9;
+// ~2.25 faces the camera, later times (~4.9) turn to the viewer's left.
+// Early times (<1.5) look down at the laptop, so right-side tracking holds front pose with a subtle 3D tilt.
 const LOOK_FRONT = 2.25;
-const LOOK_RIGHT = 0.62;
+const LOOK_LEFT = 4.9;
 
-/** Cursor X (0 = left edge, 1 = right edge) maps straight across that turn. */
+/** Cursor X (0 = left edge, 1 = right edge) maps left half to video turn and right half to subtle 3D tilt. */
 function pointerToTime(x: number) {
   const p = Math.min(1, Math.max(0, x));
   if (p <= 0.5) return LOOK_LEFT + ((LOOK_FRONT - LOOK_LEFT) * p) / 0.5;
-  return LOOK_FRONT + ((LOOK_RIGHT - LOOK_FRONT) * (p - 0.5)) / 0.5;
+  return LOOK_FRONT;
 }
 
 function useSceneMode(): SceneMode {
@@ -74,6 +74,8 @@ function HeroScene() {
     // picture on screen while currentTime has already moved, so the face looks the wrong way.
     let target = LOOK_FRONT;
     let eased = LOOK_FRONT;
+    let targetTilt = 0;
+    let easedTilt = 0;
     let shown = -1;
     let pending: number | null = null;
     let busy = false;
@@ -144,19 +146,29 @@ function HeroScene() {
 
     const tick = () => {
       eased += (target - eased) * 0.62;
-      if (visible) seek(eased);
+      easedTilt += (targetTilt - easedTilt) * 0.18;
+      if (visible) {
+        seek(eased);
+        surface.style.transform =
+          Math.abs(easedTilt) > 0.02
+            ? `perspective(1200px) rotateY(${easedTilt.toFixed(2)}deg) scale(1.03)`
+            : "";
+      }
       frame = requestAnimationFrame(tick);
     };
 
     const onMove = (e: PointerEvent) => {
       if (e.pointerType !== "mouse") return;
       tracking = true;
-      target = pointerToTime(e.clientX / window.innerWidth);
+      const p = Math.min(1, Math.max(0, e.clientX / window.innerWidth));
+      target = pointerToTime(p);
+      targetTilt = p > 0.5 ? ((p - 0.5) / 0.5) * 6 : 0;
     };
     const onLeave = () => {
       if (!tracking) return;
       tracking = false;
       target = LOOK_FRONT;
+      targetTilt = 0;
     };
     const onReady = () => {
       v.pause();
